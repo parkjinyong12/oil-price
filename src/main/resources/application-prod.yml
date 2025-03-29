@@ -1,0 +1,47 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://oil-postgres:5432/oil_db
+    username: postgres
+    password: wngus123
+    driver-class-name: org.postgresql.Driver
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+
+  jpa:
+    hibernate:
+      ddl-auto: none  # create, create-drop, validate, update 중 선택
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  jackson:
+    serialization:
+      indent_output: true  # JSON pretty print
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+opinet:
+  api:
+#    key: F250327216  # 진용쓰
+    key: F250328218  # 근용쓰
+    base-url: http://www.opinet.co.kr/api/aroundAll.do  # 오피넷 API 기본 URL
+
+google:
+  maps:
+    api:
+      key: AIzaSyBw5J03VAhl22chyK7ZfA1SsgYYX0DPNHY
+      base-url: https://maps.googleapis.com/maps/api/geocode/json
+
+logging.level.org.hibernate.SQL: DEBUG
+logging.level.org.hibernate.type.descriptor.sql: TRACE
+
+

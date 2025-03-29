@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>주유소 지도 보기</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        header {
+          padding: 12px 20px;
+          background: #f4f4f4;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        form {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        input, select, button {
+          font-size: 15px;
+          padding: 7px;
+        }
+        input[type="text"] {
+          min-width: 280px;
+          max-width: 500px;
+          flex: 1;
+        }
+        #content { display: flex; }
+        #map {
+          height: calc(100vh - 60px);
+          width: 65%;
+        }
+        #station-list {
+          width: 35%;
+          height: calc(100vh - 60px);
+          overflow-y: auto;
+          padding: 15px;
+          box-sizing: border-box;
+          border-left: 1px solid #ccc;
+        }
+        .station-item {
+          margin-bottom: 12px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid #eee;
+        }
+        .lowest { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+<header>
+    <form method="get" th:action="@{/map}">
+        <input type="text" name="address" th:value="${address}" placeholder="주소 입력" />
+        <select name="radius">
+            <option th:each="r : ${#numbers.sequence(1,5)}" th:value="${r}" th:selected="${radius == r}" th:text="${r + 'km'}"></option>
+        </select>
+        <button type="submit">검색</button>
+    </form>
+    <div><strong th:text="'현재 주소: ' + ${address}"></strong></div>
+</header>
+
+<div id="content">
+    <div id="map"></div>
+    <div id="station-list">
+        <h3>⛽ 최저가순 주유소</h3>
+        <div id="stations"></div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script th:inline="javascript">
+    const address = /*[[${address}]]*/ '서울시 강서로56나길 110';
+    fetch('/nearby?address=' + encodeURIComponent(address))
+      .then(r => r.json())
+      .then(data => {
+        if (!data || !data.length) return;
+
+        const map = L.map('map').setView([data[0].wgs84Y, data[0].wgs84X], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const minPrice = Math.min(...data.map(s => s.price));
+        const bounds = L.latLngBounds();
+        const stationList = document.getElementById('stations');
+
+        const defaultIcon = new L.Icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+        const redIcon = new L.Icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+
+        data.sort((a, b) => a.price - b.price).forEach(station => {
+          const isLowest = station.price === minPrice;
+          const icon = isLowest ? redIcon : defaultIcon;
+          const marker = L.marker([station.wgs84Y, station.wgs84X], { icon }).addTo(map);
+          marker.bindTooltip(`<strong style="color:${isLowest ? 'red' : 'black'}">${station.stationName}</strong><br/>${station.price}원`);
+          marker.bindPopup(`<strong>${station.stationName}</strong><br/>가격: ${station.price}원`);
+          bounds.extend([station.wgs84Y, station.wgs84X]);
+
+          const div = document.createElement('div');
+          div.className = 'station-item';
+          div.innerHTML = `<span class="${isLowest ? 'lowest' : ''}">${station.stationName}</span><br/><span>${station.price.toLocaleString()}원</span>`;
+          stationList.appendChild(div);
+        });
+
+        map.fitBounds(bounds, { paddingTopLeft: [40, 40], maxZoom: 15 });
+      });
+</script>
+</body>
+</html>
