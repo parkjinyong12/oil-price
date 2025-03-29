@@ -133,7 +133,27 @@ navigator.geolocation.getCurrentPosition(
         }
     },
     error => {
-        alert("위치 정보를 가져올 수 없습니다.");
-        console.error(error);
+        let errorMessage = "위치 정보를 가져올 수 없습니다.";
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                errorMessage = "위치 정보 접근 권한이 거부되었습니다. 브라우저 설정에서 위치 정보 접근을 허용해주세요.";
+                break;
+            case error.POSITION_UNAVAILABLE:
+                errorMessage = "위치 정보를 사용할 수 없습니다. GPS가 켜져있는지 확인해주세요.";
+                break;
+            case error.TIMEOUT:
+                errorMessage = "위치 정보 요청 시간이 초과되었습니다. 다시 시도해주세요.";
+                break;
+            default:
+                errorMessage = "알 수 없는 오류가 발생했습니다.";
+                break;
+        }
+        alert(errorMessage);
+        console.error("위치 정보 오류:", error);
+    },
+    {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
     }
 ); 
