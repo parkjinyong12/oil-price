@@ -46,3 +46,15 @@ bin/
 
 ### Application Secret ###
 src/main/resources/application-secret.yml
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### Logs ###
+*.log
