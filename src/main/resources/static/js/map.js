@@ -5,6 +5,22 @@ const radius = /*[[${radius}]]*/ '';
 console.log("서버에서 받은 주소:", address);
 console.log("서버에서 받은 반경:", radius);
 
+// 위치 권한 요청 함수
+function requestLocationPermission() {
+    if ("permissions" in navigator) {
+        navigator.permissions.query({ name: 'geolocation' })
+            .then(function(permissionStatus) {
+                console.log('위치 권한 상태:', permissionStatus.state);
+                if (permissionStatus.state === 'denied') {
+                    alert('위치 정보 접근이 거부되었습니다. 브라우저 설정에서 위치 정보 접근을 허용해주세요.');
+                }
+            })
+            .catch(function(error) {
+                console.error('위치 권한 확인 실패:', error);
+            });
+    }
+}
+
 // 현재 위치 확인 및 주유소 데이터 가져오기
 navigator.geolocation.getCurrentPosition(
     position => {
@@ -137,6 +153,7 @@ navigator.geolocation.getCurrentPosition(
         switch(error.code) {
             case error.PERMISSION_DENIED:
                 errorMessage = "위치 정보 접근 권한이 거부되었습니다. 브라우저 설정에서 위치 정보 접근을 허용해주세요.";
+                requestLocationPermission(); // 위치 권한 상태 확인
                 break;
             case error.POSITION_UNAVAILABLE:
                 errorMessage = "위치 정보를 사용할 수 없습니다. GPS가 켜져있는지 확인해주세요.";
